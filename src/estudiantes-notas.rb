@@ -18,12 +18,16 @@ CICLOS = {
   ["Enseñanza Media"] => [ "I", "II", "III", "IV" ],
 }
 
+# 
+# 
+
 class Estudiante
   attr_accessor :nombre, :curso_actual
 
+  PROMEDIO_APROBATORIO = 4.0
+
   def initialize(nombre, curso = nil)
     @nombre = nombre
-
     @notas = {}
     @hoja_de_vida = {}
 
@@ -61,6 +65,7 @@ class Estudiante
   end
 
   # Devuleve el promedio de la asignatura en valor numérico
+  # SOLO DEBE DE SER UTILIZADO COMO FUNCIÓN INTERNA
   def get_promedio_asignatura(nombre_asignatura)
     asignatura_seleccionada = get_asignatura(nombre_asignatura)
     if asignatura_seleccionada.nil?
@@ -73,12 +78,11 @@ class Estudiante
     }
 
     promedio = valorNotas / (asignatura_seleccionada.size)
-    return promedio
+    return promedio.truncate(2)
   end
 
-
   # Muestra en la terminal las notas y el promedio de la asignatura de forma ordenada
-  def mostrar_notas(nombre_asignatura)
+  def mostrar_data_asignatura(nombre_asignatura)
     asignatura_seleccionada = get_asignatura(nombre_asignatura)
     if asignatura_seleccionada.nil?
       return
@@ -91,13 +95,17 @@ class Estudiante
 
     promedio = get_promedio_asignatura(nombre_asignatura)
 
-    log "#{prefijo} Mostrando notas de la asignatura: #{nombre_asignatura}"
+    log "#{prefijo} Mostrando datos de la asignatura: #{nombre_asignatura}"
     log " ||- Notas: #{asignatura_seleccionada.join(" - ")}"
     log " ||- Promedio: #{promedio}"
+    if promedio < PROMEDIO_APROBATORIO then
+      log "[ADVERTENCIA] Este estudiante tiene un promedio ROJO en esta asignatura!"
+    end
     log " -- "
   end
 
   # Inserta una nota en el array de la asignatura
+  # Solo se toma el primer decimal de la nota para ser guardado
   def agregar_nota(nota, nombre_asignatura)
     asignatura_seleccionada = get_asignatura(nombre_asignatura)
     if asignatura_seleccionada.nil?
@@ -107,10 +115,10 @@ class Estudiante
     # Me imagino que hay una función que hace esto mucho mejor
     # pero viendo la documentación del objeto 'array' me mareó demasiado
     # Ni pude entender qué se supone que hace el argumento 'index' de array#insert
-    asignatura_seleccionada[asignatura_seleccionada.size] = nota
+    asignatura_seleccionada[asignatura_seleccionada.size] = nota.truncate(1)
 
     log "#{prefijo} Se le ha agregado la nota #{nota} a la asignatura #{nombre_asignatura}."
-    mostrar_notas(nombre_asignatura)
+    mostrar_data_asignatura(nombre_asignatura)
   end
 end
 
@@ -122,6 +130,7 @@ class Curso
   def initialize(identificador, letra)
     @identificador = identificador
     @letra = letra
+    @estudiantes = []
 
     log("Se ha creado el curso #{identificador}°#{letra}")
   end
@@ -137,12 +146,23 @@ class Curso
     end
 
     log("INSCRIPCION AL CURSO: #{estudiante.nombre} => #{self.nombre_curso}")
+    @estudiantes[@estudiantes.size] = estudiante
   end
 end
 
 curso1 = Curso.new("IV", "C")
 estudiante1 = Estudiante.new("Diegox")
-estudiante1.mostrar_notas("matematicas")
+estudiante1.mostrar_data_asignatura("matematicas")
 
 curso1.inscribir_a_curso(estudiante1)
 
+estudiante1.agregar_nota(7.00, "lenguaje")
+estudiante1.agregar_nota(1.00, "lenguaje")
+estudiante1.agregar_nota(7.001, "lenguaje")
+estudiante1.agregar_nota(1.00, "lenguaje")
+estudiante1.agregar_nota(7.00, "lenguaje")
+estudiante1.agregar_nota(1.001, "lenguaje")
+estudiante1.agregar_nota(1.001, "lenguaje")
+estudiante1.agregar_nota(1.001, "lenguaje")
+
+estudiante1.mostrar_data_asignatura("lenguaje")
