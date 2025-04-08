@@ -43,24 +43,74 @@ class Estudiante
     puts "No gracias."
   end
 
+  # Funcion solo de estética (para la terminal)
   def prefijo
-    return "'#{@nombre}':"
+    return "[Estudiante '#{@nombre}']"
   end
 
-  def mostrar_notas(asignatura)
-    asignatura_seleccionada = @notas[asignatura.to_sym]
+  # Devuelve el array correspondiente a la asignatura, donde están almacenadas las notas
+  def get_asignatura(nombre_asignatura)
+    asignatura_seleccionada = @notas[nombre_asignatura.to_sym]
 
     if asignatura_seleccionada.nil?
-      log "#{prefijo} Asignatura no encontrada: #{asignatura}"
+      warn "#{prefijo} Asignatura no encontrada: #{nombre_asignatura}"
+      return
+    end
+
+    return asignatura_seleccionada
+  end
+
+  # Devuleve el promedio de la asignatura en valor numérico
+  def get_promedio_asignatura(nombre_asignatura)
+    asignatura_seleccionada = get_asignatura(nombre_asignatura)
+    if asignatura_seleccionada.nil?
+      return
+    end
+
+    valorNotas = 0
+    asignatura_seleccionada.each{|key|
+      valorNotas += key
+    }
+
+    promedio = valorNotas / (asignatura_seleccionada.size)
+    return promedio
+  end
+
+
+  # Muestra en la terminal las notas y el promedio de la asignatura de forma ordenada
+  def mostrar_notas(nombre_asignatura)
+    asignatura_seleccionada = get_asignatura(nombre_asignatura)
+    if asignatura_seleccionada.nil?
       return
     end
 
     if asignatura_seleccionada.empty?
-      log "#{prefijo} No hay notas asignadas para la asignatura '#{asignatura}'"
+      log "#{prefijo} No hay notas asignadas para la asignatura '#{nombre_asignatura}'"
       return
     end
-    
-    log "#{asignatura_seleccionada}"
+
+    promedio = get_promedio_asignatura(nombre_asignatura)
+
+    log "#{prefijo} Mostrando notas de la asignatura: #{nombre_asignatura}"
+    log " ||- Notas: #{asignatura_seleccionada.join(" - ")}"
+    log " ||- Promedio: #{promedio}"
+    log " -- "
+  end
+
+  # Inserta una nota en el array de la asignatura
+  def agregar_nota(nota, nombre_asignatura)
+    asignatura_seleccionada = get_asignatura(nombre_asignatura)
+    if asignatura_seleccionada.nil?
+      return
+    end
+
+    # Me imagino que hay una función que hace esto mucho mejor
+    # pero viendo la documentación del objeto 'array' me mareó demasiado
+    # Ni pude entender qué se supone que hace el argumento 'index' de array#insert
+    asignatura_seleccionada[asignatura_seleccionada.size] = nota
+
+    log "#{prefijo} Se le ha agregado la nota #{nota} a la asignatura #{nombre_asignatura}."
+    mostrar_notas(nombre_asignatura)
   end
 end
 
@@ -90,8 +140,9 @@ class Curso
   end
 end
 
-c1 = Curso.new("IV", "C")
-e1 = Estudiante.new("Diegox", c1)
-e1.mostrar_notas("matematicas")
+curso1 = Curso.new("IV", "C")
+estudiante1 = Estudiante.new("Diegox")
+estudiante1.mostrar_notas("matematicas")
 
-c1.inscribir_a_curso("asdf")
+curso1.inscribir_a_curso(estudiante1)
+
