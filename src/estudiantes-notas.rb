@@ -18,9 +18,10 @@ CICLOS = {
   ["Enseñanza Media"] => [ "I", "II", "III", "IV" ],
 }
 
-# 
-# 
-
+# TODO:
+# Función ranking de promedios de asignaturas, de forma descendiente
+# Función de promedio general: Muestra la nota de todas las asignaturas, junto al promedio. Al final, muestra el promedio general del curso.
+# Función emitir mensaje personalizado al finalizar el curso
 class Estudiante
   attr_accessor :nombre, :curso_actual
 
@@ -30,6 +31,7 @@ class Estudiante
     @nombre = nombre
     @notas = {}
     @hoja_de_vida = {}
+    @curso_actual = nil
 
     ASIGNATURAS.each {|key| 
       @notas[key.to_sym] = []
@@ -49,7 +51,12 @@ class Estudiante
 
   # Funcion solo de estética (para la terminal)
   def prefijo
-    return "[Estudiante '#{@nombre}']"
+    if @curso_actual
+      return "['#{@nombre}' @ #{@curso_actual.nombre_curso}]"
+    else
+      return "['#{@nombre}']"
+    end
+
   end
 
   # Devuelve el array correspondiente a la asignatura, donde están almacenadas las notas
@@ -147,6 +154,7 @@ class Curso
 
     log("INSCRIPCION AL CURSO: #{estudiante.nombre} => #{self.nombre_curso}")
     @estudiantes[@estudiantes.size] = estudiante
+    estudiante.curso_actual = self
   end
 end
 
