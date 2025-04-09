@@ -11,13 +11,6 @@ end
 
 ASIGNATURAS = ["lenguaje", "matematicas", "historia", "ciencias", "ingles", "religion"]
 
-CICLOS = {
-  ["Pre-Básica"] => [ "PK", "K" ],
-  ["Primer Ciclo"] => [ "1", "2", "3", "4" ],
-  ["Segundo Ciclo"] => [ "5", "6", "7", "8" ],
-  ["Enseñanza Media"] => [ "I", "II", "III", "IV" ],
-}
-
 # TODO:
 # Función ranking de promedios de asignaturas, de forma descendiente
 # Función de promedio general: Muestra la nota de todas las asignaturas, junto al promedio. Al final, muestra el promedio general del curso.
@@ -54,9 +47,8 @@ class Estudiante
     if @curso_actual
       return "['#{@nombre}' @ #{@curso_actual.nombre_curso}]"
     else
-      return "['#{@nombre}']"
+      return "['#{@nombre}' @ Sin Curso]"
     end
-
   end
 
   # Devuelve el array correspondiente a la asignatura, donde están almacenadas las notas
@@ -131,6 +123,13 @@ end
 
 # Identificador: Ciclo (Pre basica, primer ciclo (1-4), segundo ciclo (5-8), ensseñanza media) + Numero/Letra
 # Estudiantes (Hartas instancias)
+CICLOS = {
+  ["Pre-Básica"] => [ "PK", "K" ],
+  ["Primer Ciclo"] => [ "1", "2", "3", "4" ],
+  ["Segundo Ciclo"] => [ "5", "6", "7", "8" ],
+  ["Enseñanza Media"] => [ "I", "II", "III", "IV" ],
+} 
+
 class Curso
   attr_accessor :ciclo, :identificador, :letra
 
@@ -156,9 +155,25 @@ class Curso
     @estudiantes[@estudiantes.size] = estudiante
     estudiante.curso_actual = self
   end
+
+  def ciclo
+    ciclo_obtenido = nil
+
+    # Pasa por todos los ciclos
+    CICLOS.each{|ciclo, identificadores|
+      identificadores.each{|identif_en_ciclo|
+        if @identificador == identif_en_ciclo then
+          ciclo_obtenido = ciclo[0]
+          break
+        end
+      }
+    }
+
+    return ciclo_obtenido
+  end
 end
 
-curso1 = Curso.new("IV", "C")
+curso1 = Curso.new("I", "C")
 estudiante1 = Estudiante.new("Diegox")
 estudiante1.mostrar_data_asignatura("matematicas")
 
@@ -174,3 +189,5 @@ estudiante1.agregar_nota(1.001, "lenguaje")
 estudiante1.agregar_nota(1.001, "lenguaje")
 
 estudiante1.mostrar_data_asignatura("lenguaje")
+
+log "#{curso1.ciclo}"
