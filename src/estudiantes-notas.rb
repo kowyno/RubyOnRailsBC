@@ -64,7 +64,6 @@ class Estudiante
   end
 
   # Devuleve el promedio de la asignatura en valor numérico
-  # SOLO DEBE DE SER UTILIZADO COMO FUNCIÓN INTERNA
   def get_promedio_asignatura(nombre_asignatura)
     asignatura_seleccionada = get_asignatura(nombre_asignatura)
     if asignatura_seleccionada.nil?
@@ -80,8 +79,19 @@ class Estudiante
     return promedio.truncate(2)
   end
 
+  def get_promedio_general
+    valorPromedios = 0
+
+    ASIGNATURAS.each{|nombre_asignatura|
+      valorPromedios += get_promedio_asignatura(nombre_asignatura)
+    }
+
+    promedio_general = valorPromedios / (ASIGNATURAS.size)
+    return promedio_general
+  end
+
   # Muestra en la terminal las notas y el promedio de la asignatura de forma ordenada
-  def mostrar_data_asignatura(nombre_asignatura)
+  def display_data_asignatura(nombre_asignatura)
     asignatura_seleccionada = get_asignatura(nombre_asignatura)
     if asignatura_seleccionada.nil?
       return
@@ -105,7 +115,7 @@ class Estudiante
 
   # Inserta una nota en el array de la asignatura
   # Solo se toma el primer decimal de la nota para ser guardado
-  def agregar_nota(nota, nombre_asignatura)
+  def agregar_nota(nota, nombre_asignatura, silentUpdate = nil)
     asignatura_seleccionada = get_asignatura(nombre_asignatura)
     if asignatura_seleccionada.nil?
       return
@@ -116,9 +126,14 @@ class Estudiante
     # Ni pude entender qué se supone que hace el argumento 'index' de array#insert
     asignatura_seleccionada[asignatura_seleccionada.size] = nota.truncate(1)
 
-    log "#{prefijo} Se le ha agregado la nota #{nota} a la asignatura #{nombre_asignatura}."
-    mostrar_data_asignatura(nombre_asignatura)
+    # No muestra nada en la terminal si se envia el parametro "true" como tercer argumento (silent update)
+    if silentUpdate.nil?
+      log "#{prefijo} Se le ha agregado la nota #{nota} a la asignatura #{nombre_asignatura}."
+      display_data_asignatura(nombre_asignatura)
+    end
   end
+
+
 end
 
 # Identificador: Ciclo (Pre basica, primer ciclo (1-4), segundo ciclo (5-8), ensseñanza media) + Numero/Letra
@@ -171,23 +186,28 @@ class Curso
 
     return ciclo_obtenido
   end
+
+  # Hace un ranking de los estudiantes basado en su promedio general
+  # Tambien toma el argumento "asignatura", el cual ordenará a los estudiantes segun el promedio de una asignatura en vez del general
+  def rank_estudiantes
+    
+  end
 end
 
 curso1 = Curso.new("I", "C")
 estudiante1 = Estudiante.new("Diegox")
-estudiante1.mostrar_data_asignatura("matematicas")
+estudiante1.display_data_asignatura("matematicas")
 
 curso1.inscribir_a_curso(estudiante1)
 
-estudiante1.agregar_nota(7.00, "lenguaje")
-estudiante1.agregar_nota(1.00, "lenguaje")
-estudiante1.agregar_nota(7.001, "lenguaje")
-estudiante1.agregar_nota(1.00, "lenguaje")
-estudiante1.agregar_nota(7.00, "lenguaje")
-estudiante1.agregar_nota(1.001, "lenguaje")
-estudiante1.agregar_nota(1.001, "lenguaje")
-estudiante1.agregar_nota(1.001, "lenguaje")
+#estudiante1.agregar_nota(7.00, "lenguaje")
 
-estudiante1.mostrar_data_asignatura("lenguaje")
+ASIGNATURAS.each{|nombre_asignatura|
+  estudiante1.agregar_nota(7, nombre_asignatura, true)
+}
+
+log "Promedio del estudiante: #{estudiante1.get_promedio_general}"
+
+estudiante1.display_data_asignatura("lenguaje")
 
 log "#{curso1.ciclo}"
