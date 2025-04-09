@@ -158,7 +158,8 @@ CICLOS = {
   prebasica: [ "PK", "K" ],
   primerciclo: [ "1", "2", "3", "4" ],
   segundociclo: [ "5", "6", "7", "8" ],
-  media: ["I"]#[ "I", "II", "III", "IV" ],
+  media: [ "I", "II", "III", "IV" ],
+  debug: ["IV"]
 }
 
 NOMBRES_CICLOS = {
@@ -166,6 +167,7 @@ NOMBRES_CICLOS = {
   primerciclo: "Primer Ciclo",
   segundociclo: "Segundo Ciclo",
   media: "Enseñanza Media",
+  debug: "Enseñanza Media"
 }
 
 class Curso
@@ -210,7 +212,18 @@ class Curso
     return NOMBRES_CICLOS[ciclo_obtenido]
   end
   
-  def get_
+  def get_first_place(asignatura = nil)
+    if asignatura
+      # log "Consiguiendo el primer lugar de la asignatura: #{asignatura}"
+      orden_estudiantes = @estudiantes.sort_by{ |estudiante| -estudiante.get_promedio_asignatura(asignatura) }
+
+      return orden_estudiantes[0]
+    else
+      # log "Consiguiendo el top 1 del curso"
+      orden_estudiantes = @estudiantes.sort_by{ |estudiante| -estudiante.get_promedio_general }
+      return orden_estudiantes[0]
+    end
+  end
 
   # Hace un ranking de los estudiantes basado en su promedio general
   # Tambien toma el argumento "asignatura", el cual ordenará a los estudiantes segun el promedio de una asignatura en vez del general
@@ -224,7 +237,6 @@ class Curso
       log "Rankeando a los estudiantes del curso según asignatura: #{asignatura}"
       orden_estudiantes = @estudiantes.sort_by{ |estudiante| -estudiante.get_promedio_asignatura(asignatura) }
 
-      
       orden_estudiantes.each{|estudiante|
         puts " || (#{i}°) #{estudiante.nombre} (#{estudiante.get_promedio_asignatura(asignatura).truncate(2)})"
         i += 1
@@ -241,14 +253,67 @@ class Curso
 
     puts " -- "
   end
+
+  def finalizar_curso
+    puts " =========== [ FINALIZACIÓN DE CURSO ] ==========="  
+
+    log "Se está realizando una ceremonia"
+    log "El curso #{nombre_curso} ha finalizado!"
+
+    if @identificador == "IV"
+      log "Los estudiantes se estan graduando del colegio!"
+    end
+
+    log "A continuación, veremos una recopilación de las mejores estadisticas del curso:"
+
+    # Muestra el ranking de cada asignatura de la clase
+    ASIGNATURAS.each{|nombre_asignatura|
+      rank_estudiantes(nombre_asignatura)
+    }
+
+    # Muestra a los mejores estudiantes de cada asignatura
+    puts " =========== [ Premiación alumnos destacados ] ==========="
+    log "Ahora, haremos la premiación a los mejores estudiantes de cada asignatura:"
+    ASIGNATURAS.each{|nombre_asignatura|
+      mejor_estudiante = get_first_place(nombre_asignatura)
+      log "Se premia a #{mejor_estudiante.nombre} por tener el mejor promedio en #{nombre_asignatura}!"
+    }
+
+    # Muestra a los estudiantes que no pudieron pasar de curso
+    puts " =========== [ Estudiantes reprobatorios ] =========== "
+    @estudiantes.each{|estudiante|
+      if estudiante.get_promedio_general < Estudiante::PROMEDIO_APROBATORIO
+        log "Lamentablemente, el estudiante #{estudiante.nombre} no ha podido pasar de curso debido a su promedio (#{estudiante.get_promedio_general.truncate(2)})"
+      end
+    }
+
+    # Muestra a los estudiantes que sí pasaron de curso
+    puts " =========== [ Estudiantes aprobatorios ] =========== "
+    @estudiantes.each{|estudiante|
+      if estudiante.get_promedio_general >= Estudiante::PROMEDIO_APROBATORIO
+        log "Felicitamos al estudiante #{estudiante.nombre} por pasar de curso! (#{estudiante.get_promedio_general.truncate(2)})"
+      end
+    }
+
+    puts " =========== [ !!! ] =========== "
+    log "Por último, veremos qué estudiante tuvo el mejor promedio..."
+    log "..."
+    log "Y ese estudiante es..."
+    
+    mejor_estudiante_general = get_first_place
+    log "#{mejor_estudiante_general.nombre}! Felicitaciones por conseguir el mejor promedio general del curso! (#{mejor_estudiante_general.get_promedio_general.truncate(3)})"
+
+    puts " =========== [ Término de ceremonia ] =========== "
+    log " Muchas gracias por asistir a la ceremonia del curso #{nombre_curso}. Nos veremos hasta la próxima!"
+  end
 end
 
 # GENERACIÓN DE COLEGIOS
 # El siguiente código es solamente para generar una prueba de un colegio, en conjunto a la configuración a continuación
 # Puede ser eliminado si así se desea
 
-colegio_ciclos = [:media] # Todos los simbolos de los ciclos pertenecientes al colegio. Todos los cursos de cada ciclo serán agregados
-colegio_letras = ["A"] # Letras de cada curso. Pueden ser múltiples (A, B, C, etc.)
+colegio_ciclos = [:debug] # Todos los simbolos de los ciclos pertenecientes al colegio. Todos los cursos de cada ciclo serán agregados
+colegio_letras = ["C"] # Letras de cada curso. Pueden ser múltiples (A, B, C, etc.)
 colegio_estudiantes_por_curso = 5 # Estudiantes por cada curso
 colegio_notas_por_asignatura = 10
 colegio_cursos = [] # Almacenamiento de todos los cursos (clases Curso) del colegio
@@ -298,7 +363,8 @@ colegio_ciclos.each{|ciclo_a_agregar|
 
       # nuevo_curso.rank_estudiantes("lenguaje")
       # nuevo_curso.rank_estudiantes("matematicas")
-      nuevo_curso.rank_estudiantes
+
+      nuevo_curso.finalizar_curso
       colegio_cursos.push(nuevo_curso)
     }
   }
