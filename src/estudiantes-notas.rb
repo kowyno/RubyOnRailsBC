@@ -1,5 +1,7 @@
 require 'faker'
 
+RNG = Random.new(Random.new_seed)
+
 # La tipica
 def log(str)
   puts "[LOG] #{str}"
@@ -113,6 +115,23 @@ class Estudiante
     log " -- "
   end
 
+  def display_informe_de_notas
+    log "#{prefijo} Mostrando Informe de notas"
+
+    @notas.each{|sym_asignatura, array_notas|
+      nombre_asignatura = sym_asignatura.to_s
+      asignatura_seleccionada = get_asignatura(nombre_asignatura)
+
+      log " || - Asignatura: #{nombre_asignatura}"
+      log " ||      || Notas: #{asignatura_seleccionada.join(" - ")}"
+      log " ||      || Promedio: #{get_promedio_asignatura(nombre_asignatura)}"
+    }
+
+    log " ||"
+    log " || Promedio general: #{self.get_promedio_general}"
+    log " -- "
+  end
+
   # Inserta una nota en el array de la asignatura
   # Solo se toma el primer decimal de la nota para ser guardado
   def agregar_nota(nota, nombre_asignatura, silentUpdate = nil)
@@ -121,10 +140,7 @@ class Estudiante
       return
     end
 
-    # Me imagino que hay una función que hace esto mucho mejor
-    # pero viendo la documentación del objeto 'array' me mareó demasiado
-    # Ni pude entender qué se supone que hace el argumento 'index' de array#insert
-    asignatura_seleccionada[asignatura_seleccionada.size] = nota.truncate(1)
+    asignatura_seleccionada.push(nota.truncate(1))
 
     # No muestra nada en la terminal si se envia el parametro "true" como tercer argumento (silent update)
     if silentUpdate.nil?
@@ -139,11 +155,18 @@ end
 # Identificador: Ciclo (Pre basica, primer ciclo (1-4), segundo ciclo (5-8), ensseñanza media) + Numero/Letra
 # Estudiantes (Hartas instancias)
 CICLOS = {
-  ["Pre-Básica"] => [ "PK", "K" ],
-  ["Primer Ciclo"] => [ "1", "2", "3", "4" ],
-  ["Segundo Ciclo"] => [ "5", "6", "7", "8" ],
-  ["Enseñanza Media"] => [ "I", "II", "III", "IV" ],
-} 
+  prebasica: [ "PK", "K" ],
+  primerciclo: [ "1", "2", "3", "4" ],
+  segundociclo: [ "5", "6", "7", "8" ],
+  media: ["I"]#[ "I", "II", "III", "IV" ],
+}
+
+NOMBRES_CICLOS = {
+  prebasica: "Pre-Básica",
+  primerciclo: "Primer Ciclo",
+  segundociclo: "Segundo Ciclo",
+  media: "Enseñanza Media",
+}
 
 class Curso
   attr_accessor :ciclo, :identificador, :letra
@@ -167,7 +190,7 @@ class Curso
     end
 
     log("INSCRIPCION AL CURSO: #{estudiante.nombre} => #{self.nombre_curso}")
-    @estudiantes[@estudiantes.size] = estudiante
+    @estudiantes.push(estudiante)
     estudiante.curso_actual = self
   end
 
@@ -178,36 +201,105 @@ class Curso
     CICLOS.each{|ciclo, identificadores|
       identificadores.each{|identif_en_ciclo|
         if @identificador == identif_en_ciclo then
-          ciclo_obtenido = ciclo[0]
+          ciclo_obtenido = ciclo
           break
         end
       }
     }
 
-    return ciclo_obtenido
+    return NOMBRES_CICLOS[ciclo_obtenido]
   end
+  
+  def get_
 
   # Hace un ranking de los estudiantes basado en su promedio general
   # Tambien toma el argumento "asignatura", el cual ordenará a los estudiantes segun el promedio de una asignatura en vez del general
-  def rank_estudiantes
-    
+  
+  # Siento que esta funcion usa código repetido, pero tampoco encontré una forma mejor de hacerlo
+  # Aún así, la función cumple con su función (lolazo)
+  def rank_estudiantes(asignatura = nil)
+    i = 1
+
+    if asignatura
+      log "Rankeando a los estudiantes del curso según asignatura: #{asignatura}"
+      orden_estudiantes = @estudiantes.sort_by{ |estudiante| -estudiante.get_promedio_asignatura(asignatura) }
+
+      
+      orden_estudiantes.each{|estudiante|
+        puts " || (#{i}°) #{estudiante.nombre} (#{estudiante.get_promedio_asignatura(asignatura).truncate(2)})"
+        i += 1
+      }
+    else
+      log "Rankeando a los estudiantes del curso según promedio general."
+      orden_estudiantes = @estudiantes.sort_by{ |estudiante| -estudiante.get_promedio_general }
+
+      orden_estudiantes.each{|estudiante|
+        puts " || (#{i}°) #{estudiante.nombre} (#{estudiante.get_promedio_general.truncate(2)})"
+        i += 1
+      }
+    end
+
+    puts " -- "
   end
 end
 
-curso1 = Curso.new("I", "C")
-estudiante1 = Estudiante.new("Diegox")
-estudiante1.display_data_asignatura("matematicas")
+# GENERACIÓN DE COLEGIOS
+# El siguiente código es solamente para generar una prueba de un colegio, en conjunto a la configuración a continuación
+# Puede ser eliminado si así se desea
 
-curso1.inscribir_a_curso(estudiante1)
+colegio_ciclos = [:media] # Todos los simbolos de los ciclos pertenecientes al colegio. Todos los cursos de cada ciclo serán agregados
+colegio_letras = ["A"] # Letras de cada curso. Pueden ser múltiples (A, B, C, etc.)
+colegio_estudiantes_por_curso = 5 # Estudiantes por cada curso
+colegio_notas_por_asignatura = 10
+colegio_cursos = [] # Almacenamiento de todos los cursos (clases Curso) del colegio
 
-#estudiante1.agregar_nota(7.00, "lenguaje")
+# Le asignará al colegio cada uno de los cursos de los ciclos asignados
+colegio_ciclos.each{|ciclo_a_agregar|
 
-ASIGNATURAS.each{|nombre_asignatura|
-  estudiante1.agregar_nota(7, nombre_asignatura, true)
+  # Se asegura de que el ciclo existe, ya que puede ser que se escribió mal.
+  if CICLOS[ciclo_a_agregar].nil?
+    warn "[ERROR] No se ha encontrado el ciclo: #{ciclo_a_agregar}. Escribiste bien el nombre del ciclo?"
+    break
+  end
+
+  # Agrega todos los cursos del ciclo
+  CICLOS[ciclo_a_agregar].each{|identificador_curso|
+
+    # Agrega un curso por cada letra en la configuración
+    colegio_letras.each{|letra|
+      nuevo_curso = Curso.new(identificador_curso, letra)
+
+      # Crea un estudiante nuevo, según configuracion (colegio_estudiantes_por_curso)
+      i = 0
+      loop do
+        nuevo_estudiante = Estudiante.new(Faker::Name.name, nuevo_curso)
+
+        # Asigna todas las notas necesarias para cada asignatura, según configuracion (colegio_notas_por_asignatura)
+        ASIGNATURAS.each{|nombre_asignatura|
+          j = 0
+          loop do
+            nuevo_estudiante.agregar_nota(RNG.rand(1.0..7.0), nombre_asignatura, true)
+            j += 1
+            if j == colegio_notas_por_asignatura
+              break
+            end
+          end
+        }
+
+        # MOSTRAR INFORME DE NOTAS DEL ESTUDIANTE:
+        # Se recomienda asignar solo 1 estudiante por curso para activar esta funcion
+        # nuevo_estudiante.display_informe_de_notas
+
+        i += 1
+        if i == colegio_estudiantes_por_curso
+          break
+        end
+      end
+
+      # nuevo_curso.rank_estudiantes("lenguaje")
+      # nuevo_curso.rank_estudiantes("matematicas")
+      nuevo_curso.rank_estudiantes
+      colegio_cursos.push(nuevo_curso)
+    }
+  }
 }
-
-log "Promedio del estudiante: #{estudiante1.get_promedio_general}"
-
-estudiante1.display_data_asignatura("lenguaje")
-
-log "#{curso1.ciclo}"
