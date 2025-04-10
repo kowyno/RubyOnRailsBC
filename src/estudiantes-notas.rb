@@ -57,7 +57,7 @@ class Estudiante
   def get_asignatura(nombre_asignatura)
     asignatura_seleccionada = @notas[nombre_asignatura.to_sym]
 
-    if asignatura_seleccionada.nil?
+    unless asignatura_seleccionada
       warn "#{prefijo} Asignatura no encontrada: #{nombre_asignatura}"
       return
     end
@@ -68,9 +68,7 @@ class Estudiante
   # Devuleve el promedio de la asignatura en valor numérico
   def get_promedio_asignatura(nombre_asignatura)
     asignatura_seleccionada = get_asignatura(nombre_asignatura)
-    if asignatura_seleccionada.nil?
-      return
-    end
+    return unless asignatura_seleccionada
 
     valorNotas = 0
     asignatura_seleccionada.each{|key|
@@ -95,9 +93,7 @@ class Estudiante
   # Muestra en la terminal las notas y el promedio de la asignatura de forma ordenada
   def display_data_asignatura(nombre_asignatura)
     asignatura_seleccionada = get_asignatura(nombre_asignatura)
-    if asignatura_seleccionada.nil?
-      return
-    end
+    return unless asignatura_seleccionada
 
     if asignatura_seleccionada.empty?
       log "#{prefijo} No hay notas asignadas para la asignatura '#{nombre_asignatura}'"
@@ -136,14 +132,12 @@ class Estudiante
   # Solo se toma el primer decimal de la nota para ser guardado
   def agregar_nota(nota, nombre_asignatura, silentUpdate = nil)
     asignatura_seleccionada = get_asignatura(nombre_asignatura)
-    if asignatura_seleccionada.nil?
-      return
-    end
+    return unless asignatura_seleccionada
 
     asignatura_seleccionada.push(nota.truncate(1))
 
     # No muestra nada en la terminal si se envia el parametro "true" como tercer argumento (silent update)
-    if silentUpdate.nil?
+    unless silentUpdate
       log "#{prefijo} Se le ha agregado la nota #{nota} a la asignatura #{nombre_asignatura}."
       display_data_asignatura(nombre_asignatura)
     end
@@ -322,7 +316,7 @@ colegio_cursos = [] # Almacenamiento de todos los cursos (clases Curso) del cole
 colegio_ciclos.each{|ciclo_a_agregar|
 
   # Se asegura de que el ciclo existe, ya que puede ser que se escribió mal.
-  if CICLOS[ciclo_a_agregar].nil?
+  unless CICLOS[ciclo_a_agregar]
     warn "[ERROR] No se ha encontrado el ciclo: #{ciclo_a_agregar}. Escribiste bien el nombre del ciclo?"
     break
   end
@@ -338,6 +332,9 @@ colegio_ciclos.each{|ciclo_a_agregar|
       i = 0
       loop do
         nuevo_estudiante = Estudiante.new(Faker::Name.name, nuevo_curso)
+
+        # Chequeo por si tira error los nuevos cambios de "if" a "unless"
+        # nuevo_estudiante.display_data_asignatura("no_existente")
 
         # Asigna todas las notas necesarias para cada asignatura, según configuracion (colegio_notas_por_asignatura)
         ASIGNATURAS.each{|nombre_asignatura|
